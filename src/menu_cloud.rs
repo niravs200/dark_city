@@ -1,3 +1,4 @@
+use crate::splash::MenuAssets;
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -9,23 +10,15 @@ pub struct Cloud {
     pub speed: f32,
 }
 
-pub fn spawn_clouds(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    windows: Query<&Window>,
-) {
+pub fn spawn_clouds(mut commands: Commands, menu_assets: Res<MenuAssets>, windows: Query<&Window>) {
     let window = windows.single().unwrap();
-    let cloud_images = vec![
-        asset_server.load("menu/cloud1.png"),
-        asset_server.load("menu/cloud2.png"),
-    ];
     let mut rng = rand::rng();
 
     for _ in 0..5 {
-        let image = cloud_images[rng.random_range(0..cloud_images.len())].clone();
+        let image = menu_assets.clouds[rng.random_range(0..menu_assets.clouds.len())].clone();
         let x = rng.random_range(-window.width() / 2.0..window.width() / 2.0);
         let y = rng.random_range(0.0..window.height() / 2.0);
-        let speed = rng.random_range(10.0..30.0);
+        let speed = rng.random_range(20.0..40.0);
 
         commands.spawn((
             Sprite { image, ..default() },

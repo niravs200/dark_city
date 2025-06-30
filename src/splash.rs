@@ -10,11 +10,25 @@ pub fn splash_plugin(app: &mut App) {
 #[derive(Component)]
 struct OnSplashScreen;
 
+#[derive(Resource)]
+pub struct MenuAssets {
+    pub clouds: Vec<Handle<Image>>,
+}
+
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
 fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let icon = asset_server.load("branding/icon.png");
+
+    let cloud_images = vec![
+        asset_server.load("menu/cloud1.png"),
+        asset_server.load("menu/cloud2.png"),
+    ];
+
+    commands.insert_resource(MenuAssets {
+        clouds: cloud_images,
+    });
 
     commands.spawn((
         Node {
@@ -42,8 +56,15 @@ fn countdown(
     mut game_state: ResMut<NextState<GameState>>,
     time: Res<Time>,
     mut timer: ResMut<SplashTimer>,
+    menu_assets: Res<MenuAssets>,
+    asset_server: Res<AssetServer>,
 ) {
-    if timer.tick(time.delta()).finished() {
+    let all_loaded = menu_assets
+        .clouds
+        .iter()
+        .all(|handle| asset_server.is_loaded_with_dependencies(handle));
+
+    if all_loaded && timer.tick(time.delta()).finished() {
         game_state.set(GameState::Menu);
     }
 }
