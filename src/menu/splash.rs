@@ -1,4 +1,5 @@
-use super::{GameState, despawn_screen::despawn_screen};
+use crate::despawn_screen::despawn_screen;
+use crate::game_state::GameState;
 use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
 use bevy::prelude::*;
 
