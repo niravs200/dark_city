@@ -1,4 +1,5 @@
 use super::{GameState, despawn_screen::despawn_screen};
+use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
 use bevy::prelude::*;
 
 pub fn splash_plugin(app: &mut App) {
@@ -10,25 +11,13 @@ pub fn splash_plugin(app: &mut App) {
 #[derive(Component)]
 struct OnSplashScreen;
 
-#[derive(Resource)]
-pub struct MenuAssets {
-    pub clouds: Vec<Handle<Image>>,
-}
-
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
 fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let icon = asset_server.load("branding/icon.png");
 
-    let cloud_images = vec![
-        asset_server.load("menu/cloud1.png"),
-        asset_server.load("menu/cloud2.png"),
-    ];
-
-    commands.insert_resource(MenuAssets {
-        clouds: cloud_images,
-    });
+    load_menu_assets(&mut commands, asset_server);
 
     commands.spawn((
         Node {
@@ -59,11 +48,7 @@ fn countdown(
     menu_assets: Res<MenuAssets>,
     asset_server: Res<AssetServer>,
 ) {
-    let all_loaded = menu_assets
-        .clouds
-        .iter()
-        .all(|handle| asset_server.is_loaded_with_dependencies(handle));
-
+    let all_loaded = are_menu_assets_loaded(menu_assets, asset_server);
     if all_loaded && timer.tick(time.delta()).finished() {
         game_state.set(GameState::Menu);
     }

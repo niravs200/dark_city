@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
+
 use super::{TEXT_COLOR, despawn_screen::despawn_screen, game_state::GameState};
 
 pub fn game_plugin(app: &mut App) {
@@ -14,7 +16,9 @@ struct OnGameScreen;
 #[derive(Resource, Deref, DerefMut)]
 struct GameTimer(Timer);
 
-fn game_setup(mut commands: Commands) {
+fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    load_menu_assets(&mut commands, asset_server);
+
     commands.spawn((
         Node {
             width: Val::Percent(100.0),
@@ -53,8 +57,11 @@ fn game(
     time: Res<Time>,
     mut game_state: ResMut<NextState<GameState>>,
     mut timer: ResMut<GameTimer>,
+    menu_assets: Res<MenuAssets>,
+    asset_server: Res<AssetServer>,
 ) {
-    if timer.tick(time.delta()).finished() {
+    let all_loaded = are_menu_assets_loaded(menu_assets, asset_server);
+    if all_loaded && timer.tick(time.delta()).finished() {
         game_state.set(GameState::Menu)
     }
 }

@@ -1,6 +1,7 @@
-use crate::splash::MenuAssets;
 use bevy::prelude::*;
 use rand::Rng;
+
+use crate::menu::MenuAssets;
 
 #[derive(Component)]
 pub struct MainMenuCloud;

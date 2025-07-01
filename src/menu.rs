@@ -5,6 +5,11 @@ use super::{
     menu_cloud::despawn_clouds, menu_cloud::spawn_clouds,
 };
 
+#[derive(Resource)]
+pub struct MenuAssets {
+    pub clouds: Vec<Handle<Image>>,
+}
+
 pub fn menu_plugin(app: &mut App) {
     app.init_state::<MenuState>()
         .add_systems(OnEnter(GameState::Menu), menu_setup)
@@ -12,6 +17,7 @@ pub fn menu_plugin(app: &mut App) {
         .add_systems(OnEnter(MenuState::Main), spawn_clouds)
         .add_systems(OnExit(MenuState::Main), despawn_screen::<OnMainMenuScreen>)
         .add_systems(OnExit(MenuState::Main), despawn_clouds)
+        .add_systems(OnExit(MenuState::Main), cleanup_assets)
         .add_systems(
             Update,
             (menu_action, button_system, animate_clouds).run_if(in_state(GameState::Menu)),
@@ -155,4 +161,31 @@ fn menu_action(
             }
         }
     }
+}
+
+pub fn load_menu_assets(commands: &mut Commands, asset_server: Res<AssetServer>) {
+    let cloud_images = vec![
+        asset_server.load("menu/cloud1.png"),
+        asset_server.load("menu/cloud2.png"),
+    ];
+
+    commands.insert_resource(MenuAssets {
+        clouds: cloud_images,
+    });
+}
+
+pub fn are_menu_assets_loaded(
+    menu_assets: Res<MenuAssets>,
+    asset_server: Res<AssetServer>,
+) -> bool {
+    let all_loaded = menu_assets
+        .clouds
+        .iter()
+        .all(|handle| asset_server.is_loaded_with_dependencies(handle));
+
+    all_loaded
+}
+
+fn cleanup_assets(mut commands: Commands) {
+    commands.remove_resource::<MenuAssets>();
 }
