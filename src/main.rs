@@ -1,25 +1,21 @@
 use bevy::prelude::*;
 
+mod constants;
 mod despawn_screen;
 mod game;
 mod game_state;
 mod menu;
-mod menu_cloud;
-mod splash;
 
 use game::game_plugin;
 use game_state::GameState;
-use menu::menu_plugin;
-use splash::splash_plugin;
-
-const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+use menu::{menu_plugin, splash_plugin};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<GameState>()
         .add_systems(Startup, setup)
-        .add_plugins((splash::splash_plugin, menu::menu_plugin, game::game_plugin))
+        .add_plugins((splash_plugin, menu_plugin, game_plugin))
         .run();
 }
 

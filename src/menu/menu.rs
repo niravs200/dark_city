@@ -1,9 +1,10 @@
+use crate::constants::text::MENU_TEXT_COLOR;
 use bevy::{app::AppExit, prelude::*};
 
-use super::{
-    GameState, TEXT_COLOR, despawn_screen::despawn_screen, menu_cloud::animate_clouds,
-    menu_cloud::despawn_clouds, menu_cloud::spawn_clouds,
-};
+use crate::despawn_screen::despawn_screen;
+use crate::game_state::GameState;
+
+use super::{menu_cloud::animate_clouds, menu_cloud::despawn_clouds, menu_cloud::spawn_clouds};
 
 #[derive(Resource)]
 pub struct MenuAssets {
@@ -109,7 +110,7 @@ fn main_menu_setup(mut commands: Commands, windows: Query<&Window>) {
                         font_size: window.height() * 0.1,
                         ..default()
                     },
-                    TextColor(TEXT_COLOR),
+                    TextColor(MENU_TEXT_COLOR),
                     Node {
                         top: Val::Percent(10.0),
                         margin: UiRect::bottom(Val::Percent(5.0)),
@@ -124,7 +125,7 @@ fn main_menu_setup(mut commands: Commands, windows: Query<&Window>) {
                     children![(
                         Text::new("New Game"),
                         button_text_font.clone(),
-                        TextColor(TEXT_COLOR),
+                        TextColor(MENU_TEXT_COLOR),
                     ),]
                 ),
                 (
@@ -132,7 +133,11 @@ fn main_menu_setup(mut commands: Commands, windows: Query<&Window>) {
                     button_node,
                     BackgroundColor(NORMAL_BUTTON),
                     MenuButtonAction::Quit,
-                    children![(Text::new("Quit"), button_text_font, TextColor(TEXT_COLOR),),]
+                    children![(
+                        Text::new("Quit"),
+                        button_text_font,
+                        TextColor(MENU_TEXT_COLOR),
+                    ),]
                 ),
             ]
         )],

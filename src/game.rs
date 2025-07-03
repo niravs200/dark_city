@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
+use crate::constants::text::MENU_TEXT_COLOR;
 use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
 
-use super::{TEXT_COLOR, despawn_screen::despawn_screen, game_state::GameState};
+use super::{despawn_screen::despawn_screen, game_state::GameState};
 
 pub fn game_plugin(app: &mut App) {
     app.add_systems(OnEnter(GameState::Game), game_setup)
@@ -41,7 +42,7 @@ fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     font_size: 67.0,
                     ..default()
                 },
-                TextColor(TEXT_COLOR),
+                TextColor(MENU_TEXT_COLOR),
                 Node {
                     margin: UiRect::all(Val::Px(50.0)),
                     ..default()
