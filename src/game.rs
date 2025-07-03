@@ -1,57 +1,47 @@
+use bevy::input::InputSystem;
 use bevy::prelude::*;
 
-use crate::constants::text::MENU_TEXT_COLOR;
+use crate::entities::{despawn_map, setup_map};
 use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
+use crate::player::{
+    LookInput, MovementInput, despawn_player, handle_input, player_look, player_movement,
+    setup_player,
+};
 
-use super::{despawn_screen::despawn_screen, game_state::GameState};
+use super::game_state::GameState;
 
 pub fn game_plugin(app: &mut App) {
-    app.add_systems(OnEnter(GameState::Game), game_setup)
+    app.init_resource::<MovementInput>()
+        .init_resource::<LookInput>()
+        .add_systems(OnEnter(GameState::Game), game_setup)
+        .add_systems(
+            PreUpdate,
+            handle_input
+                .after(InputSystem)
+                .run_if(in_state(GameState::Game)),
+        )
+        .add_systems(Update, player_look.run_if(in_state(GameState::Game)))
+        .add_systems(Update, player_movement.run_if(in_state(GameState::Game)))
         .add_systems(Update, game.run_if(in_state(GameState::Game)))
-        .add_systems(OnExit(GameState::Game), despawn_screen::<OnGameScreen>);
+        .add_systems(OnExit(GameState::Game), despawn_map)
+        .add_systems(OnExit(GameState::Game), despawn_player);
 }
-
-#[derive(Component)]
-struct OnGameScreen;
 
 #[derive(Resource, Deref, DerefMut)]
 struct GameTimer(Timer);
 
-fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn game_setup(
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+) {
     load_menu_assets(&mut commands, asset_server);
 
-    commands.spawn((
-        Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            ..default()
-        },
-        OnGameScreen,
-        children![(
-            Node {
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(Color::BLACK),
-            children![(
-                Text::new("Game Started. Will finish in 5 sec"),
-                TextFont {
-                    font_size: 67.0,
-                    ..default()
-                },
-                TextColor(MENU_TEXT_COLOR),
-                Node {
-                    margin: UiRect::all(Val::Px(50.0)),
-                    ..default()
-                },
-            )]
-        )],
-    ));
+    setup_player(&mut commands);
+    setup_map(&mut commands, meshes, materials);
 
-    commands.insert_resource(GameTimer(Timer::from_seconds(5.0, TimerMode::Once)));
+    commands.insert_resource(GameTimer(Timer::from_seconds(120.0, TimerMode::Once)));
 }
 
 fn game(
