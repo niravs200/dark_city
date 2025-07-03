@@ -17,11 +17,6 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, RapierPhysicsPlugin::<NoUserData>::default()))
         .init_state::<GameState>()
-        .add_systems(Startup, setup)
         .add_plugins((splash_plugin, menu_plugin, game_plugin))
         .run();
-}
-
-fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d);
 }

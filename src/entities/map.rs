@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::constants::map::{GROUND_MATERIAL_COLOR, STAIRS_MATERIAL_COLOR};
+use crate::constants::map::{GROUND_MATERIAL_COLOR, WALL_MATERIAL_COLOR};
 
 #[derive(Component)]
 pub struct MapEntity;
@@ -30,37 +30,50 @@ pub fn setup_map(
         MapEntity,
     ));
 
-    let stair_len = 30;
-    let stair_step = 0.2;
+    let wall_thickness = 1.0;
+    let wall_height = 10.0;
 
-    let stair_size_xz = 2.0;
+    let wall_material = materials.add(WALL_MATERIAL_COLOR);
 
-    for i in 1..=stair_len {
-        let step = i as f32;
-        let height = step * stair_step;
+    let north_wall_mesh = meshes.add(Cuboid::new(ground_size * 2.0, wall_height, wall_thickness));
+    commands.spawn((
+        Mesh3d(north_wall_mesh),
+        MeshMaterial3d(wall_material.clone()),
+        Transform::from_xyz(0.0, wall_height / 2.0, ground_size),
+        GlobalTransform::default(),
+        Collider::cuboid(ground_size, wall_height / 2.0, wall_thickness / 2.0),
+        MapEntity,
+    ));
 
-        let stair_mesh = meshes.add(Cuboid::new(stair_size_xz, height, stair_size_xz));
-        let stair_material = materials.add(STAIRS_MATERIAL_COLOR);
+    let south_wall_mesh = meshes.add(Cuboid::new(ground_size * 2.0, wall_height, wall_thickness));
+    commands.spawn((
+        Mesh3d(south_wall_mesh),
+        MeshMaterial3d(wall_material.clone()),
+        Transform::from_xyz(0.0, wall_height / 2.0, -ground_size),
+        GlobalTransform::default(),
+        Collider::cuboid(ground_size, wall_height / 2.0, wall_thickness / 2.0),
+        MapEntity,
+    ));
 
-        let collider = Collider::cuboid(stair_size_xz / 2.0, height, stair_size_xz / 2.0);
+    let east_wall_mesh = meshes.add(Cuboid::new(wall_thickness, wall_height, ground_size * 2.0));
+    commands.spawn((
+        Mesh3d(east_wall_mesh),
+        MeshMaterial3d(wall_material.clone()),
+        Transform::from_xyz(ground_size, wall_height / 2.0, 0.0),
+        GlobalTransform::default(),
+        Collider::cuboid(wall_thickness / 2.0, wall_height / 2.0, ground_size),
+        MapEntity,
+    ));
 
-        let y = height;
-        let z = step * 2.0 - 20.0;
-        let z_neg = step * -2.0 + 20.0;
-        let x = step * 2.0 - 20.0;
-        let x_neg = step * -2.0 + 20.0;
-
-        for (x_pos, z_pos) in [(40.0, z), (-40.0, z_neg), (x, 40.0), (x_neg, -40.0)] {
-            commands.spawn((
-                Mesh3d(stair_mesh.clone()),
-                MeshMaterial3d(stair_material.clone()),
-                Transform::from_xyz(x_pos, y, z_pos),
-                GlobalTransform::default(),
-                collider.clone(),
-                MapEntity,
-            ));
-        }
-    }
+    let west_wall_mesh = meshes.add(Cuboid::new(wall_thickness, wall_height, ground_size * 2.0));
+    commands.spawn((
+        Mesh3d(west_wall_mesh),
+        MeshMaterial3d(wall_material.clone()),
+        Transform::from_xyz(-ground_size, wall_height / 2.0, 0.0),
+        GlobalTransform::default(),
+        Collider::cuboid(wall_thickness / 2.0, wall_height / 2.0, ground_size),
+        MapEntity,
+    ));
 
     commands.spawn((
         DirectionalLight { ..default() },

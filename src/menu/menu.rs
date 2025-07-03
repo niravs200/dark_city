@@ -1,4 +1,7 @@
-use crate::constants::text::MENU_TEXT_COLOR;
+use crate::{
+    constants::text::MENU_TEXT_COLOR,
+    menu::{camera2d_despawn, camera2d_spawn},
+};
 use bevy::{app::AppExit, prelude::*};
 
 use crate::despawn_screen::despawn_screen;
@@ -13,6 +16,7 @@ pub struct MenuAssets {
 
 pub fn menu_plugin(app: &mut App) {
     app.init_state::<MenuState>()
+        .add_systems(OnEnter(GameState::Menu), camera2d_spawn)
         .add_systems(OnEnter(GameState::Menu), menu_setup)
         .add_systems(OnEnter(MenuState::Main), main_menu_setup)
         .add_systems(OnEnter(MenuState::Main), spawn_clouds)
@@ -22,7 +26,8 @@ pub fn menu_plugin(app: &mut App) {
         .add_systems(
             Update,
             (menu_action, button_system, animate_clouds).run_if(in_state(GameState::Menu)),
-        );
+        )
+        .add_systems(OnExit(GameState::Splash), camera2d_despawn);
 }
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]

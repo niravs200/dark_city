@@ -1,12 +1,16 @@
 use crate::despawn_screen::despawn_screen;
 use crate::game_state::GameState;
-use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
+use crate::menu::{
+    MenuAssets, are_menu_assets_loaded, camera2d_despawn, camera2d_spawn, load_menu_assets,
+};
 use bevy::prelude::*;
 
 pub fn splash_plugin(app: &mut App) {
     app.add_systems(OnEnter(GameState::Splash), splash_setup)
+        .add_systems(OnEnter(GameState::Splash), camera2d_spawn)
         .add_systems(Update, countdown.run_if(in_state(GameState::Splash)))
-        .add_systems(OnExit(GameState::Splash), despawn_screen::<OnSplashScreen>);
+        .add_systems(OnExit(GameState::Splash), despawn_screen::<OnSplashScreen>)
+        .add_systems(OnExit(GameState::Splash), camera2d_despawn);
 }
 
 #[derive(Component)]
