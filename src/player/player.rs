@@ -4,7 +4,8 @@ use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 #[derive(Component)]
 pub struct Player;
 
-pub fn setup_player(commands: &mut Commands) {
+pub fn setup_player(commands: &mut Commands) -> Entity {
+    let mut camera_entity = None;
     commands
         .spawn((
             Player,
@@ -29,11 +30,15 @@ pub fn setup_player(commands: &mut Commands) {
             },
         ))
         .with_children(|b| {
-            b.spawn((Camera3d::default(), Transform::from_xyz(0.0, 0.2, -0.1)));
+            camera_entity = Some(
+                b.spawn((Camera3d::default(), Transform::from_xyz(0.0, 0.2, -0.1)))
+                    .id(),
+            );
         });
+    camera_entity.unwrap()
 }
 
-pub fn despawn_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
+pub fn despawn_player(commands: &mut Commands, query: Query<Entity, With<Player>>) {
     for entity in &query {
         commands.entity(entity).despawn();
     }

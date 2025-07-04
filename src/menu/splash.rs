@@ -22,7 +22,7 @@ struct SplashTimer(Timer);
 fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let icon = asset_server.load("branding/icon.png");
 
-    load_menu_assets(&mut commands, asset_server);
+    load_menu_assets(&mut commands, &asset_server);
 
     commands.spawn((
         Node {

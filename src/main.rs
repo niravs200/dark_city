@@ -7,6 +7,7 @@ mod game;
 mod game_state;
 mod menu;
 mod player;
+mod ui;
 
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use game::game_plugin;

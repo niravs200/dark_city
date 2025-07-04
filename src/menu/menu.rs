@@ -27,7 +27,7 @@ pub fn menu_plugin(app: &mut App) {
             Update,
             (menu_action, button_system, animate_clouds).run_if(in_state(GameState::Menu)),
         )
-        .add_systems(OnExit(GameState::Splash), camera2d_despawn);
+        .add_systems(OnExit(MenuState::Main), camera2d_despawn);
 }
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
@@ -173,7 +173,7 @@ fn menu_action(
     }
 }
 
-pub fn load_menu_assets(commands: &mut Commands, asset_server: Res<AssetServer>) {
+pub fn load_menu_assets(commands: &mut Commands, asset_server: &Res<AssetServer>) {
     let cloud_images = vec![
         asset_server.load("menu/cloud1.png"),
         asset_server.load("menu/cloud2.png"),

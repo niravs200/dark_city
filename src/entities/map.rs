@@ -83,7 +83,7 @@ pub fn setup_map(
     ));
 }
 
-pub fn despawn_map(mut commands: Commands, query: Query<Entity, With<MapEntity>>) {
+pub fn despawn_map(commands: &mut Commands, query: Query<Entity, With<MapEntity>>) {
     for entity in &query {
         commands.entity(entity).despawn();
     }

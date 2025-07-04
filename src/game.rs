@@ -1,12 +1,16 @@
 use bevy::input::InputSystem;
 use bevy::prelude::*;
 
+use crate::entities::map::MapEntity;
 use crate::entities::{despawn_map, setup_map};
 use crate::menu::{MenuAssets, are_menu_assets_loaded, load_menu_assets};
+use crate::player::player::Player;
 use crate::player::{
     LookInput, MovementInput, despawn_player, handle_input, player_look, player_movement,
     setup_player,
 };
+use crate::ui::cross_hair::Crosshair;
+use crate::ui::{despawn_crosshair, hide_cursor, show_cursor, spawn_crosshair};
 
 use super::game_state::GameState;
 
@@ -23,8 +27,7 @@ pub fn game_plugin(app: &mut App) {
         .add_systems(Update, player_look.run_if(in_state(GameState::Game)))
         .add_systems(Update, player_movement.run_if(in_state(GameState::Game)))
         .add_systems(Update, game.run_if(in_state(GameState::Game)))
-        .add_systems(OnExit(GameState::Game), despawn_map)
-        .add_systems(OnExit(GameState::Game), despawn_player);
+        .add_systems(OnExit(GameState::Game), game_cleanup);
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -35,13 +38,29 @@ fn game_setup(
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    windows: Query<&mut Window>,
 ) {
-    load_menu_assets(&mut commands, asset_server);
+    load_menu_assets(&mut commands, &asset_server);
 
-    setup_player(&mut commands);
+    let camera_entity = setup_player(&mut commands);
     setup_map(&mut commands, meshes, materials);
+    hide_cursor(windows);
+    spawn_crosshair(&mut commands, &asset_server, camera_entity);
 
-    commands.insert_resource(GameTimer(Timer::from_seconds(120.0, TimerMode::Once)));
+    commands.insert_resource(GameTimer(Timer::from_seconds(10.0, TimerMode::Once)));
+}
+
+fn game_cleanup(
+    mut commands: Commands,
+    query_map: Query<Entity, With<MapEntity>>,
+    query_player: Query<Entity, With<Player>>,
+    windows: Query<&mut Window>,
+    crosshair_q: Query<Entity, With<Crosshair>>,
+) {
+    despawn_map(&mut commands, query_map);
+    despawn_crosshair(&mut commands, crosshair_q);
+    despawn_player(&mut commands, query_player);
+    show_cursor(windows);
 }
 
 fn game(
