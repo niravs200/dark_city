@@ -1,8 +1,9 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
-use crate::constants::player::{
-    GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED,
+use crate::{
+    constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
+    ui::{PauseOverlay, PauseState, despawn_pause_ui, spawn_pause_ui},
 };
 
 #[derive(Default, Resource, Deref, DerefMut)]
@@ -16,31 +17,46 @@ pub fn handle_input(
     mut movement: ResMut<MovementInput>,
     mut look: ResMut<LookInput>,
     mut mouse_events: EventReader<MouseMotion>,
+    mut pause_state: ResMut<PauseState>,
+    commands: Commands,
+    pause_query: Query<Entity, With<PauseOverlay>>,
 ) {
-    if keyboard.pressed(KeyCode::KeyW) {
-        movement.z -= 1.0;
-    }
-    if keyboard.pressed(KeyCode::KeyS) {
-        movement.z += 1.0
-    }
-    if keyboard.pressed(KeyCode::KeyA) {
-        movement.x -= 1.0;
-    }
-    if keyboard.pressed(KeyCode::KeyD) {
-        movement.x += 1.0
-    }
-    **movement = movement.normalize_or_zero();
-    if keyboard.pressed(KeyCode::ShiftLeft) {
-        **movement *= 2.0;
-    }
-    if keyboard.pressed(KeyCode::Space) {
-        movement.y = 1.0;
+    if keyboard.just_pressed(KeyCode::Escape) {
+        pause_state.is_paused = !pause_state.is_paused;
+
+        if pause_state.is_paused {
+            spawn_pause_ui(commands);
+        } else {
+            despawn_pause_ui(commands, pause_query);
+        }
     }
 
-    for event in mouse_events.read() {
-        look.x -= event.delta.x * MOUSE_SENSITIVITY;
-        look.y -= event.delta.y * MOUSE_SENSITIVITY;
-        look.y = look.y.clamp(-89.9, 89.9);
+    if !pause_state.is_paused {
+        if keyboard.pressed(KeyCode::KeyW) {
+            movement.z -= 1.0;
+        }
+        if keyboard.pressed(KeyCode::KeyS) {
+            movement.z += 1.0
+        }
+        if keyboard.pressed(KeyCode::KeyA) {
+            movement.x -= 1.0;
+        }
+        if keyboard.pressed(KeyCode::KeyD) {
+            movement.x += 1.0
+        }
+        **movement = movement.normalize_or_zero();
+        if keyboard.pressed(KeyCode::ShiftLeft) {
+            **movement *= 2.0;
+        }
+        if keyboard.pressed(KeyCode::Space) {
+            movement.y = 1.0;
+        }
+
+        for event in mouse_events.read() {
+            look.x -= event.delta.x * MOUSE_SENSITIVITY;
+            look.y -= event.delta.y * MOUSE_SENSITIVITY;
+            look.y = look.y.clamp(-89.9, 89.9);
+        }
     }
 }
 

@@ -10,13 +10,14 @@ use crate::player::{
     setup_player,
 };
 use crate::ui::cross_hair::Crosshair;
-use crate::ui::{despawn_crosshair, hide_cursor, show_cursor, spawn_crosshair};
+use crate::ui::{PauseState, despawn_crosshair, hide_cursor, show_cursor, spawn_crosshair};
 
 use super::game_state::GameState;
 
 pub fn game_plugin(app: &mut App) {
     app.init_resource::<MovementInput>()
         .init_resource::<LookInput>()
+        .init_resource::<PauseState>()
         .add_systems(OnEnter(GameState::Game), game_setup)
         .add_systems(
             PreUpdate,
@@ -25,13 +26,20 @@ pub fn game_plugin(app: &mut App) {
                 .run_if(in_state(GameState::Game)),
         )
         .add_systems(Update, player_look.run_if(in_state(GameState::Game)))
-        .add_systems(Update, player_movement.run_if(in_state(GameState::Game)))
+        .add_systems(
+            Update,
+            player_movement.run_if(in_state(GameState::Game).and(not_paused)),
+        )
         .add_systems(Update, game.run_if(in_state(GameState::Game)))
         .add_systems(OnExit(GameState::Game), game_cleanup);
 }
 
 #[derive(Resource, Deref, DerefMut)]
 struct GameTimer(Timer);
+
+pub fn not_paused(pause_state: Res<PauseState>) -> bool {
+    !pause_state.is_paused
+}
 
 fn game_setup(
     mut commands: Commands,
@@ -47,7 +55,7 @@ fn game_setup(
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, camera_entity);
 
-    commands.insert_resource(GameTimer(Timer::from_seconds(10.0, TimerMode::Once)));
+    commands.insert_resource(GameTimer(Timer::from_seconds(20.0, TimerMode::Once)));
 }
 
 fn game_cleanup(
