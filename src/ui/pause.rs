@@ -8,7 +8,47 @@ pub struct PauseState {
     pub is_paused: bool,
 }
 
-pub fn spawn_pause_ui(mut commands: Commands) {
+#[derive(Resource, Default)]
+pub struct EscButtonState {
+    pub progress: u8,
+}
+
+#[derive(Component)]
+pub struct EscButton;
+
+fn get_border_for_state(state: u8) -> UiRect {
+    match state {
+        0 => UiRect::all(Val::Px(0.0)),
+        1 => UiRect {
+            top: Val::Px(3.0),
+            right: Val::Px(0.0),
+            bottom: Val::Px(0.0),
+            left: Val::Px(0.0),
+        },
+        2 => UiRect {
+            top: Val::Px(3.0),
+            right: Val::Px(3.0),
+            bottom: Val::Px(0.0),
+            left: Val::Px(0.0),
+        },
+        3 => UiRect {
+            top: Val::Px(3.0),
+            right: Val::Px(3.0),
+            bottom: Val::Px(3.0),
+            left: Val::Px(0.0),
+        },
+        4 => UiRect {
+            top: Val::Px(3.0),
+            right: Val::Px(3.0),
+            bottom: Val::Px(3.0),
+            left: Val::Px(3.0),
+        },
+        5 => UiRect::all(Val::Px(4.0)),
+        _ => UiRect::all(Val::Px(0.0)),
+    }
+}
+
+pub fn spawn_pause_ui(commands: &mut Commands) {
     commands
         .spawn((
             Node {
@@ -31,10 +71,50 @@ pub fn spawn_pause_ui(mut commands: Commands) {
                 },
                 TextColor(Color::WHITE),
             ));
+
+            parent
+                .spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        bottom: Val::Px(30.0),
+                        right: Val::Px(30.0),
+                        width: Val::Px(80.0),
+                        height: Val::Px(50.0),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        border: get_border_for_state(0),
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.3, 0.3, 0.3, 0.9)),
+                    BorderColor(Color::WHITE),
+                    BorderRadius::all(Val::Px(8.0)),
+                    EscButton,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text::new("ESC"),
+                        TextFont {
+                            font_size: 20.0,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                    ));
+                });
         });
 }
 
-pub fn despawn_pause_ui(mut commands: Commands, query: Query<Entity, With<PauseOverlay>>) {
+pub fn update_esc_button_border(
+    esc_state: Res<EscButtonState>,
+    mut query: Query<&mut Node, With<EscButton>>,
+) {
+    if esc_state.is_changed() {
+        for mut node in query.iter_mut() {
+            node.border = get_border_for_state(esc_state.progress);
+        }
+    }
+}
+
+pub fn despawn_pause_ui(commands: &mut Commands, query: Query<Entity, With<PauseOverlay>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }

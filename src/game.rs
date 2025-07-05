@@ -10,7 +10,10 @@ use crate::player::{
     setup_player,
 };
 use crate::ui::cross_hair::Crosshair;
-use crate::ui::{PauseState, despawn_crosshair, hide_cursor, show_cursor, spawn_crosshair};
+use crate::ui::{
+    EscButtonState, PauseState, despawn_crosshair, hide_cursor, show_cursor, spawn_crosshair,
+    update_esc_button_border,
+};
 
 use super::game_state::GameState;
 
@@ -18,6 +21,7 @@ pub fn game_plugin(app: &mut App) {
     app.init_resource::<MovementInput>()
         .init_resource::<LookInput>()
         .init_resource::<PauseState>()
+        .init_resource::<EscButtonState>()
         .add_systems(OnEnter(GameState::Game), game_setup)
         .add_systems(
             PreUpdate,
@@ -31,6 +35,10 @@ pub fn game_plugin(app: &mut App) {
             player_movement.run_if(in_state(GameState::Game).and(not_paused)),
         )
         .add_systems(Update, game.run_if(in_state(GameState::Game)))
+        .add_systems(
+            Update,
+            update_esc_button_border.run_if(in_state(GameState::Game).and(paused)),
+        )
         .add_systems(OnExit(GameState::Game), game_cleanup);
 }
 
@@ -39,6 +47,10 @@ struct GameTimer(Timer);
 
 pub fn not_paused(pause_state: Res<PauseState>) -> bool {
     !pause_state.is_paused
+}
+
+pub fn paused(pause_state: Res<PauseState>) -> bool {
+    pause_state.is_paused
 }
 
 fn game_setup(
@@ -55,7 +67,7 @@ fn game_setup(
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, camera_entity);
 
-    commands.insert_resource(GameTimer(Timer::from_seconds(20.0, TimerMode::Once)));
+    commands.insert_resource(GameTimer(Timer::from_seconds(10.0, TimerMode::Once)));
 }
 
 fn game_cleanup(

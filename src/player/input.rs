@@ -3,7 +3,7 @@ use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 use crate::{
     constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
-    ui::{PauseOverlay, PauseState, despawn_pause_ui, spawn_pause_ui},
+    ui::{EscButtonState, PauseOverlay, PauseState, despawn_pause_ui, spawn_pause_ui},
 };
 
 #[derive(Default, Resource, Deref, DerefMut)]
@@ -18,17 +18,42 @@ pub fn handle_input(
     mut look: ResMut<LookInput>,
     mut mouse_events: EventReader<MouseMotion>,
     mut pause_state: ResMut<PauseState>,
-    commands: Commands,
+    mut commands: Commands,
     pause_query: Query<Entity, With<PauseOverlay>>,
+    mut esc_state: ResMut<EscButtonState>,
+    time: Res<Time>,
+    mut hold_timer: Local<f32>,
 ) {
-    if keyboard.just_pressed(KeyCode::Escape) {
-        pause_state.is_paused = !pause_state.is_paused;
-
-        if pause_state.is_paused {
-            spawn_pause_ui(commands);
-        } else {
-            despawn_pause_ui(commands, pause_query);
+    if pause_state.is_paused {
+        if keyboard.just_pressed(KeyCode::Escape) {
+            *hold_timer = 0.0;
+            esc_state.progress = 0;
         }
+
+        if keyboard.pressed(KeyCode::Escape) {
+            *hold_timer += time.delta_secs();
+            esc_state.progress = (*hold_timer * 5.0).clamp(0.0, 5.0) as u8;
+        }
+
+        if keyboard.just_released(KeyCode::Escape) {
+            if *hold_timer < 0.5 {
+                pause_state.is_paused = false;
+                despawn_pause_ui(&mut commands, pause_query);
+            }
+
+            *hold_timer = 0.0;
+            esc_state.progress = 0;
+        }
+
+        return;
+    }
+
+    if keyboard.just_released(KeyCode::Escape) {
+        pause_state.is_paused = true;
+        spawn_pause_ui(&mut commands);
+        *hold_timer = 0.0;
+        esc_state.progress = 0;
+        return;
     }
 
     if !pause_state.is_paused {
