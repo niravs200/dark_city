@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::{game_state::GameState, menu::menu::MenuState};
+
 #[derive(Component)]
 pub struct PauseOverlay;
 
@@ -106,8 +108,17 @@ pub fn spawn_pause_ui(commands: &mut Commands) {
 pub fn update_esc_button_border(
     esc_state: Res<EscButtonState>,
     mut query: Query<&mut Node, With<EscButton>>,
+    mut menu_state: ResMut<NextState<MenuState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+    mut pause_state: ResMut<PauseState>,
 ) {
     if esc_state.is_changed() {
+        if esc_state.progress == 6 {
+            game_state.set(GameState::Menu);
+            menu_state.set(MenuState::Main);
+            pause_state.is_paused = false;
+            return;
+        }
         for mut node in query.iter_mut() {
             node.border = get_border_for_state(esc_state.progress);
         }

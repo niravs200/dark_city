@@ -32,7 +32,7 @@ pub fn handle_input(
 
         if keyboard.pressed(KeyCode::Escape) {
             *hold_timer += time.delta_secs();
-            esc_state.progress = (*hold_timer * 5.0).clamp(0.0, 5.0) as u8;
+            esc_state.progress = (*hold_timer * 5.0).clamp(0.0, 6.0) as u8;
         }
 
         if keyboard.just_released(KeyCode::Escape) {
