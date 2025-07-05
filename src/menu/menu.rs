@@ -31,7 +31,7 @@ pub fn menu_plugin(app: &mut App) {
 }
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
-enum MenuState {
+pub enum MenuState {
     Main,
     #[default]
     Disabled,
