@@ -151,7 +151,7 @@ pub fn setup_map(
         extension: -20.0,
         empty_side: [WallType::SOUTH].into_iter().collect(),
         door_side: HashSet::new(),
-        offset: Vec3::new(200.0, 0.0, 15.0),
+        offset: Vec3::new(200.0, 0.0, 10.0),
     });
 
     for room in rooms {
