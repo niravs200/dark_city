@@ -2,7 +2,8 @@ use bevy::input::InputSystem;
 use bevy::prelude::*;
 
 use super::game_state::GameState;
-use crate::entities::map::{MapEntity, despawn_map, setup_map};
+use crate::entities::map::map::MapEntity;
+use crate::entities::map::{despawn_map, setup_map};
 use crate::menu::load_menu_assets;
 use crate::player::player::Player;
 use crate::player::{
@@ -49,15 +50,15 @@ pub fn paused(pause_state: Res<PauseState>) -> bool {
 
 fn game_setup(
     mut commands: Commands,
-    meshes: ResMut<Assets<Mesh>>,
-    materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     windows: Query<&mut Window>,
 ) {
     load_menu_assets(&mut commands, &asset_server);
 
     let camera_entity = setup_player(&mut commands);
-    setup_map(&mut commands, meshes, materials);
+    setup_map(&mut commands, &mut meshes, &mut materials);
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, camera_entity);
 }

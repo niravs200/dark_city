@@ -1,17 +1,16 @@
+use crate::{
+    constants::map::{GROUND_MATERIAL_COLOR, WALL_MATERIAL_COLOR},
+    entities::map::{WallOrientation, map::MapEntity, spawn_wall_with_hole},
+};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::constants::map::{GROUND_MATERIAL_COLOR, WALL_MATERIAL_COLOR};
-
-#[derive(Component)]
-pub struct MapEntity;
-
-pub fn setup_map(
-    commands: &mut Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+pub fn setup_entry_area(
+    mut commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
 ) {
-    let ground_size = 50.0;
+    let ground_size = 30.0;
     let ground_height = 0.1;
 
     let ground_mesh = meshes.add(Cuboid::new(
@@ -33,7 +32,7 @@ pub fn setup_map(
     let wall_thickness = 1.0;
     let wall_height = 10.0;
 
-    let wall_material = materials.add(WALL_MATERIAL_COLOR);
+    let mut wall_material = materials.add(WALL_MATERIAL_COLOR);
 
     let north_wall_mesh = meshes.add(Cuboid::new(ground_size * 2.0, wall_height, wall_thickness));
     commands.spawn((
@@ -55,15 +54,18 @@ pub fn setup_map(
         MapEntity,
     ));
 
-    let east_wall_mesh = meshes.add(Cuboid::new(wall_thickness, wall_height, ground_size * 2.0));
-    commands.spawn((
-        Mesh3d(east_wall_mesh),
-        MeshMaterial3d(wall_material.clone()),
-        Transform::from_xyz(ground_size, wall_height / 2.0, 0.0),
-        GlobalTransform::default(),
-        Collider::cuboid(wall_thickness / 2.0, wall_height / 2.0, ground_size),
-        MapEntity,
-    ));
+    spawn_wall_with_hole(
+        &mut commands,
+        meshes,
+        &mut wall_material,
+        wall_thickness,
+        wall_height,
+        3.0,
+        ground_size,
+        Vec3::new(0.0, 0.0, 0.0),
+        10.0,
+        WallOrientation::AlongZ,
+    );
 
     let west_wall_mesh = meshes.add(Cuboid::new(wall_thickness, wall_height, ground_size * 2.0));
     commands.spawn((
@@ -81,10 +83,4 @@ pub fn setup_map(
         GlobalTransform::default(),
         MapEntity,
     ));
-}
-
-pub fn despawn_map(commands: &mut Commands, query: Query<Entity, With<MapEntity>>) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
 }
