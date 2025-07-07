@@ -6,7 +6,7 @@ use crate::{
     },
     entities::map::map::MapEntity,
 };
-use bevy::prelude::*;
+use bevy::{pbr::NotShadowCaster, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 pub enum WallOrientation {
@@ -255,33 +255,144 @@ pub fn make_room(
                 }
             }
         }
+
+        make_roof(
+            commands,
+            meshes,
+            materials,
+            wall_height,
+            offset,
+            extension,
+            &empty_side,
+        );
     }
+}
+
+pub fn make_roof(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    wall_height: f32,
+    offset: Vec3,
+    extension: f32,
+    empty_side: &HashSet<WallType>,
+) {
+    const ROOF_THICKNESS: f32 = 0.2;
+    const ROOF_MATERIAL_COLOR: Color = Color::srgb(0.4, 0.3, 0.2);
+
+    let ground_size = BASE_ROOM_SIZE + extension;
+    let roof_thickness = ROOF_THICKNESS;
+
+    let roof_mesh = meshes.add(Cuboid::new(
+        ground_size * 2.0,
+        roof_thickness,
+        ground_size * 2.0,
+    ));
+
+    let roof_material = materials.add(ROOF_MATERIAL_COLOR);
 
     commands.spawn((
-        DirectionalLight {
-            color: Color::WHITE,
-            illuminance: 5000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(10.0 + offset.x, 20.0 + offset.y, 10.0 + offset.z)
-            .looking_at(Vec3::new(offset.x, offset.y, offset.z), Vec3::Y), // Point towards room center
+        Mesh3d(roof_mesh),
+        MeshMaterial3d(roof_material.clone()),
+        Transform::from_xyz(
+            0.0 + offset.x,
+            wall_height + roof_thickness / 2.0 + offset.y,
+            0.0 + offset.z,
+        ),
         GlobalTransform::default(),
+        Collider::cuboid(ground_size, roof_thickness / 2.0, ground_size),
         MapEntity,
     ));
 
-    commands.spawn((
-        PointLight {
-            color: Color::WHITE,
-            intensity: 2000.0,
-            range: ground_size * 4.0,
-            radius: 0.5,
-            ..default()
-        },
-        Transform::from_xyz(offset.x, wall_height * 0.7 + offset.y, offset.z),
-        GlobalTransform::default(),
-        MapEntity,
-    ));
+    let overhang_distance = 0.5;
+    let overhang_thickness = roof_thickness;
+
+    for wall_type in WallType::all() {
+        if empty_side.contains(wall_type) {
+            match wall_type {
+                WallType::NORTH => {
+                    let overhang_mesh = meshes.add(Cuboid::new(
+                        ground_size * 2.0,
+                        overhang_thickness,
+                        overhang_distance * 2.0,
+                    ));
+                    commands.spawn((
+                        Mesh3d(overhang_mesh),
+                        MeshMaterial3d(roof_material.clone()),
+                        Transform::from_xyz(
+                            0.0 + offset.x,
+                            wall_height + overhang_thickness / 2.0 + offset.y,
+                            ground_size + overhang_distance + offset.z,
+                        ),
+                        GlobalTransform::default(),
+                        Collider::cuboid(ground_size, overhang_thickness / 2.0, overhang_distance),
+                        NotShadowCaster,
+                        MapEntity,
+                    ));
+                }
+                WallType::SOUTH => {
+                    let overhang_mesh = meshes.add(Cuboid::new(
+                        ground_size * 2.0,
+                        overhang_thickness,
+                        overhang_distance * 2.0,
+                    ));
+                    commands.spawn((
+                        Mesh3d(overhang_mesh),
+                        MeshMaterial3d(roof_material.clone()),
+                        Transform::from_xyz(
+                            0.0 + offset.x,
+                            wall_height + overhang_thickness / 2.0 + offset.y,
+                            -ground_size - overhang_distance + offset.z,
+                        ),
+                        GlobalTransform::default(),
+                        Collider::cuboid(ground_size, overhang_thickness / 2.0, overhang_distance),
+                        NotShadowCaster,
+                        MapEntity,
+                    ));
+                }
+                WallType::WEST => {
+                    let overhang_mesh = meshes.add(Cuboid::new(
+                        overhang_distance * 2.0,
+                        overhang_thickness,
+                        ground_size * 2.0,
+                    ));
+                    commands.spawn((
+                        Mesh3d(overhang_mesh),
+                        MeshMaterial3d(roof_material.clone()),
+                        Transform::from_xyz(
+                            -ground_size - overhang_distance + offset.x,
+                            wall_height + overhang_thickness / 2.0 + offset.y,
+                            0.0 + offset.z,
+                        ),
+                        GlobalTransform::default(),
+                        Collider::cuboid(overhang_distance, overhang_thickness / 2.0, ground_size),
+                        NotShadowCaster,
+                        MapEntity,
+                    ));
+                }
+                WallType::EAST => {
+                    let overhang_mesh = meshes.add(Cuboid::new(
+                        overhang_distance * 2.0,
+                        overhang_thickness,
+                        ground_size * 2.0,
+                    ));
+                    commands.spawn((
+                        Mesh3d(overhang_mesh),
+                        MeshMaterial3d(roof_material.clone()),
+                        Transform::from_xyz(
+                            ground_size + overhang_distance + offset.x,
+                            wall_height + overhang_thickness / 2.0 + offset.y,
+                            0.0 + offset.z,
+                        ),
+                        GlobalTransform::default(),
+                        Collider::cuboid(overhang_distance, overhang_thickness / 2.0, ground_size),
+                        NotShadowCaster,
+                        MapEntity,
+                    ));
+                }
+            }
+        }
+    }
 }
 
 pub fn spawn_wall_with_hole(
