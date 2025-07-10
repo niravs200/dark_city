@@ -2,7 +2,6 @@ use bevy::input::InputSystem;
 use bevy::prelude::*;
 
 use super::game_state::GameState;
-use crate::entities::map::light::{brighten_ambient, remove_ambient};
 use crate::entities::map::map::MapEntity;
 use crate::entities::map::{despawn_map, setup_map};
 use crate::menu::load_menu_assets;
@@ -55,15 +54,13 @@ fn game_setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     windows: Query<&mut Window>,
-    ambient: ResMut<AmbientLight>,
 ) {
     load_menu_assets(&mut commands, &asset_server);
 
     let camera_entity = setup_player(&mut commands);
-    setup_map(&mut commands, &mut meshes, &mut materials);
+    setup_map(&mut commands, &mut meshes, &mut materials, &asset_server);
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, camera_entity);
-    brighten_ambient(ambient);
 }
 
 fn game_cleanup(
@@ -79,5 +76,4 @@ fn game_cleanup(
     despawn_player(&mut commands, query_player);
     despawn_pause_ui(&mut commands, pause_query);
     show_cursor(windows);
-    remove_ambient(commands);
 }

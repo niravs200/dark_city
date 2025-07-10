@@ -21,6 +21,7 @@ pub fn setup_map(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
+    asset_server: &Res<AssetServer>,
 ) {
     let mut rooms: Vec<Room> = Vec::new();
 
@@ -165,6 +166,7 @@ pub fn setup_map(
             room.extension,
             room.empty_side,
             room.door_side,
+            asset_server,
         );
     }
 }
