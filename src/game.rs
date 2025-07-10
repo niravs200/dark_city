@@ -11,6 +11,7 @@ use crate::player::{
     setup_player,
 };
 use crate::ui::cross_hair::Crosshair;
+use crate::ui::hud::{HUD, cleanup_hud, setup_hud};
 use crate::ui::{
     EscButtonState, PauseOverlay, PauseState, despawn_crosshair, despawn_pause_ui, hide_cursor,
     show_cursor, spawn_crosshair, update_esc_button_border,
@@ -59,6 +60,7 @@ fn game_setup(
 
     let camera_entity = setup_player(&mut commands);
     setup_map(&mut commands, &mut meshes, &mut materials, &asset_server);
+    setup_hud(&mut commands, &windows);
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, camera_entity);
 }
@@ -70,10 +72,12 @@ fn game_cleanup(
     windows: Query<&mut Window>,
     crosshair_q: Query<Entity, With<Crosshair>>,
     pause_query: Query<Entity, With<PauseOverlay>>,
+    hud_query: Query<Entity, With<HUD>>,
 ) {
     despawn_map(&mut commands, query_map);
     despawn_crosshair(&mut commands, crosshair_q);
     despawn_player(&mut commands, query_player);
     despawn_pause_ui(&mut commands, pause_query);
     show_cursor(windows);
+    cleanup_hud(commands, hud_query);
 }

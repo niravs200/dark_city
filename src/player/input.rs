@@ -3,7 +3,12 @@ use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 use crate::{
     constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
-    ui::{EscButtonState, PauseOverlay, PauseState, despawn_pause_ui, spawn_pause_ui},
+    entities::map::map::RoomBoundsData,
+    ui::{
+        EscButtonState, PauseOverlay, PauseState, despawn_pause_ui,
+        hud::{RoomNameDisplay, update_room_display_text},
+        spawn_pause_ui,
+    },
 };
 
 #[derive(Default, Resource, Deref, DerefMut)]
@@ -95,6 +100,8 @@ pub fn player_movement(
     )>,
     mut vertical_movement: Local<f32>,
     mut grounded_timer: Local<f32>,
+    bounds_data: Res<RoomBoundsData>,
+    room_name_q: Query<&mut Text, With<RoomNameDisplay>>,
 ) {
     let Ok((transform, mut controller, output)) = player.single_mut() else {
         return;
@@ -117,6 +124,39 @@ pub fn player_movement(
     movement.y = *vertical_movement;
     *vertical_movement += GRAVITY * delta_time * controller.custom_mass.unwrap_or(1.0);
     controller.translation = Some(transform.rotation * (movement * delta_time));
+
+    calculate_player_room_location(&mut player, bounds_data, room_name_q);
+}
+
+fn calculate_player_room_location(
+    player: &mut Query<(
+        &mut Transform,
+        &mut KinematicCharacterController,
+        Option<&KinematicCharacterControllerOutput>,
+    )>,
+    bounds_data: Res<RoomBoundsData>,
+    room_name_q: Query<&mut Text, With<RoomNameDisplay>>,
+) {
+    let Ok((player_transform, _, _)) = player.single_mut() else {
+        return;
+    };
+
+    let player_pos = player_transform.translation;
+
+    for bound in &bounds_data.bounds {
+        if player_pos.x >= bound.min.x
+            && player_pos.x <= bound.max.x
+            && player_pos.y >= bound.min.y
+            && player_pos.y <= bound.max.y
+            && player_pos.z >= bound.min.z
+            && player_pos.z <= bound.max.z
+        {
+            update_room_display_text(Some(&bound.name), room_name_q);
+            return;
+        }
+    }
+
+    update_room_display_text(None, room_name_q);
 }
 
 pub fn player_look(
