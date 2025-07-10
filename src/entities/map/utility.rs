@@ -1,9 +1,7 @@
 use std::collections::HashSet;
 
 use crate::{
-    constants::map::{
-        BASE_ROOM_SIZE, GROUND_HEIGHT, ROOF_MATERIAL_COLOR, ROOF_THICKNESS, WALL_THICKNESS,
-    },
+    constants::map::{BASE_ROOM_SIZE, GROUND_HEIGHT, ROOF_THICKNESS, WALL_THICKNESS},
     entities::map::map::MapEntity,
 };
 use bevy::{
