@@ -185,9 +185,8 @@ pub fn make_room(
     ));
 
     let wall_thickness = WALL_THICKNESS;
-    let wall_color_texture = Some(asset_server.load_with_settings(
-        "map/bricks_wall.png",
-        |s: &mut _| {
+    let bricks_texture = Some(
+        asset_server.load_with_settings("map/bricks.png", |s: &mut _| {
             *s = ImageLoaderSettings {
                 sampler: ImageSampler::Descriptor(ImageSamplerDescriptor {
                     address_mode_u: ImageAddressMode::Repeat,
@@ -196,17 +195,17 @@ pub fn make_room(
                 }),
                 ..default()
             }
-        },
-    ));
+        }),
+    );
     let wall_material_ew = materials.add(StandardMaterial {
-        base_color_texture: wall_color_texture.clone(),
+        base_color_texture: bricks_texture.clone(),
         uv_transform: Affine2::from_scale(Vec2::new(6., 1.))
             * Affine2::from_angle(std::f32::consts::PI / 2.0),
         ..default()
     });
 
     let wall_material_ns = materials.add(StandardMaterial {
-        base_color_texture: wall_color_texture.clone(),
+        base_color_texture: bricks_texture.clone(),
         uv_transform: Affine2::from_scale(Vec2::new(6., 1.)),
         ..default()
     });
@@ -219,7 +218,7 @@ pub fn make_room(
                         commands,
                         meshes,
                         &wall_material_ns,
-                        wall_color_texture.clone(),
+                        bricks_texture.clone(),
                         materials,
                         wall_thickness,
                         wall_height,
@@ -233,7 +232,7 @@ pub fn make_room(
                         commands,
                         meshes,
                         &wall_material_ns,
-                        wall_color_texture.clone(),
+                        bricks_texture.clone(),
                         materials,
                         wall_thickness,
                         wall_height,
@@ -247,7 +246,7 @@ pub fn make_room(
                         commands,
                         meshes,
                         &wall_material_ew,
-                        wall_color_texture.clone(),
+                        bricks_texture.clone(),
                         materials,
                         wall_thickness,
                         wall_height,
@@ -261,7 +260,7 @@ pub fn make_room(
                         commands,
                         meshes,
                         &wall_material_ew,
-                        wall_color_texture.clone(),
+                        bricks_texture.clone(),
                         materials,
                         wall_thickness,
                         wall_height,
@@ -314,7 +313,15 @@ pub fn make_room(
             }
         }
 
-        make_roof(commands, meshes, materials, wall_height, offset, extension);
+        make_roof(
+            commands,
+            meshes,
+            materials,
+            bricks_texture.clone(),
+            wall_height,
+            offset,
+            extension,
+        );
     }
 }
 
@@ -322,6 +329,7 @@ pub fn make_roof(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
+    bricks_texture: Option<Handle<Image>>,
     wall_height: f32,
     offset: Vec3,
     extension: f32,
@@ -336,8 +344,9 @@ pub fn make_roof(
     ));
 
     let roof_material = materials.add(StandardMaterial {
-        base_color: ROOF_MATERIAL_COLOR,
+        base_color_texture: bricks_texture,
         perceptual_roughness: 1.0,
+        uv_transform: Affine2::from_scale(Vec2::new(ground_size / 6., ground_size / 6.)),
         ..default()
     });
 
