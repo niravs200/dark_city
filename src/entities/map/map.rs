@@ -2,7 +2,10 @@ use std::collections::HashSet;
 
 use bevy::prelude::*;
 
-use crate::entities::map::utility::{WallType, make_room};
+use crate::{
+    constants::map::BASE_ROOM_SIZE,
+    entities::map::utility::{WallType, make_room},
+};
 
 #[derive(Component)]
 pub struct MapEntity;
@@ -15,6 +18,55 @@ struct Room {
     empty_side: HashSet<WallType>,
     door_side: HashSet<WallType>,
     offset: Vec3,
+}
+
+#[derive(Clone, Debug)]
+pub struct RoomBounds {
+    pub name: String,
+    pub min: Vec3,
+    pub max: Vec3,
+}
+
+#[derive(Resource)]
+pub struct RoomBoundsData {
+    pub bounds: Vec<RoomBounds>,
+}
+
+impl Room {
+    pub fn get_bounds(&self) -> (Vec3, Vec3) {
+        let map_size = BASE_ROOM_SIZE + self.extension;
+
+        let min = Vec3::new(
+            self.offset.x - map_size / 2.0,
+            self.offset.y - 5.0,
+            self.offset.z - map_size / 2.0,
+        );
+
+        let max = Vec3::new(
+            self.offset.x + map_size / 2.0,
+            self.offset.y + self.wall_height,
+            self.offset.z + map_size / 2.0,
+        );
+
+        (min, max)
+    }
+}
+
+fn extract_room_bounds(commands: &mut Commands, rooms: &Vec<Room>) {
+    let bounds_vec: Vec<RoomBounds> = rooms
+        .iter()
+        .map(|room| {
+            let (min, max) = room.get_bounds();
+
+            RoomBounds {
+                name: room.name.clone(),
+                min,
+                max,
+            }
+        })
+        .collect();
+
+    commands.insert_resource(RoomBoundsData { bounds: bounds_vec });
 }
 
 pub fn setup_map(
@@ -154,6 +206,8 @@ pub fn setup_map(
         door_side: HashSet::new(),
         offset: Vec3::new(200.0, 0.0, 10.0),
     });
+
+    extract_room_bounds(commands, &rooms);
 
     for room in rooms {
         make_room(
