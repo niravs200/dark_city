@@ -2,8 +2,7 @@ use std::collections::HashSet;
 
 use crate::{
     constants::map::{
-        BASE_ROOM_SIZE, GROUND_HEIGHT, GROUND_MATERIAL_COLOR, ROOF_MATERIAL_COLOR, ROOF_THICKNESS,
-        WALL_THICKNESS,
+        BASE_ROOM_SIZE, GROUND_HEIGHT, ROOF_MATERIAL_COLOR, ROOF_THICKNESS, WALL_THICKNESS,
     },
     entities::map::map::MapEntity,
 };
@@ -154,10 +153,25 @@ pub fn make_room(
         ground_size * 2.0,
     ));
 
+    let ground_color_texture = Some(asset_server.load_with_settings(
+        "map/ground.png",
+        |s: &mut _| {
+            *s = ImageLoaderSettings {
+                sampler: ImageSampler::Descriptor(ImageSamplerDescriptor {
+                    address_mode_u: ImageAddressMode::Repeat,
+                    address_mode_v: ImageAddressMode::Repeat,
+                    ..default()
+                }),
+                ..default()
+            }
+        },
+    ));
+
     let ground_material = materials.add(StandardMaterial {
-        base_color: GROUND_MATERIAL_COLOR,
+        base_color_texture: ground_color_texture,
         perceptual_roughness: 0.8,
         reflectance: 0.4,
+        uv_transform: Affine2::from_scale(Vec2::new(ground_size / 6., ground_size / 6.)),
         ..default()
     });
 
