@@ -4,6 +4,7 @@ use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 use crate::{
     constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
     entities::map::map::RoomBoundsData,
+    player::weapons::{Sword, SwordSlash},
     ui::{
         EscButtonState, PauseOverlay, PauseState, despawn_pause_ui,
         hud::{RoomNameDisplay, update_room_display_text},
@@ -22,12 +23,14 @@ pub fn handle_input(
     mut movement: ResMut<MovementInput>,
     mut look: ResMut<LookInput>,
     mut mouse_events: EventReader<MouseMotion>,
+    mouse: Res<ButtonInput<MouseButton>>,
     mut pause_state: ResMut<PauseState>,
     mut commands: Commands,
     pause_query: Query<Entity, With<PauseOverlay>>,
     mut esc_state: ResMut<EscButtonState>,
     time: Res<Time>,
     mut hold_timer: Local<f32>,
+    sword_query: Query<Entity, With<Sword>>,
 ) {
     if pause_state.is_paused {
         if keyboard.just_pressed(KeyCode::Escape) {
@@ -62,6 +65,16 @@ pub fn handle_input(
     }
 
     if !pause_state.is_paused {
+        if mouse.just_pressed(MouseButton::Left) {
+            info!("Sword is swinging");
+            for sword_entity in sword_query.iter() {
+                commands.entity(sword_entity).insert(SwordSlash {
+                    start_time: time.elapsed_secs(),
+                    duration: 2.0,
+                });
+            }
+        }
+
         if keyboard.pressed(KeyCode::KeyW) {
             movement.z -= 1.0;
         }
