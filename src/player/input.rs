@@ -1,7 +1,9 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy_kira_audio::Audio;
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 use crate::{
+    audio::player_audio::PlayerSoundLibrary,
     constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
     entities::map::map::RoomBoundsData,
     player::weapons::{Sword, SwordSlash},
@@ -11,6 +13,7 @@ use crate::{
         spawn_pause_ui,
     },
 };
+use bevy_kira_audio::prelude::*;
 
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct MovementInput(Vec3);
@@ -31,6 +34,9 @@ pub fn handle_input(
     time: Res<Time>,
     mut hold_timer: Local<f32>,
     sword_query: Query<Entity, With<Sword>>,
+    audio: Res<Audio>,
+    player_sound_library: Option<Res<PlayerSoundLibrary>>,
+    mut footsteps_playing: Local<bool>,
 ) {
     if pause_state.is_paused {
         if keyboard.just_pressed(KeyCode::Escape) {
@@ -72,6 +78,23 @@ pub fn handle_input(
                     start_time: time.elapsed_secs(),
                     duration: 0.8,
                 });
+            }
+        }
+
+        let movement_keys = [KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD];
+
+        let any_pressed = movement_keys.iter().any(|key| keyboard.pressed(*key));
+        let any_just_released = movement_keys.iter().any(|key| keyboard.just_released(*key));
+
+        if let Some(player_sound_library) = player_sound_library {
+            if any_pressed && !*footsteps_playing {
+                audio.play(player_sound_library.walk.clone()).looped();
+                *footsteps_playing = true;
+            }
+
+            if any_just_released && !any_pressed && *footsteps_playing {
+                audio.stop();
+                *footsteps_playing = false;
             }
         }
 
