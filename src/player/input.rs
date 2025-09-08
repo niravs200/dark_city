@@ -21,6 +21,19 @@ pub struct MovementInput(Vec3);
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct LookInput(Vec2);
 
+#[derive(PartialEq, Eq)]
+pub enum FootstepState {
+    None,
+    Walking,
+    Running,
+}
+
+impl Default for FootstepState {
+    fn default() -> Self {
+        FootstepState::None
+    }
+}
+
 pub fn handle_input(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut movement: ResMut<MovementInput>,
@@ -36,7 +49,7 @@ pub fn handle_input(
     sword_query: Query<Entity, With<Sword>>,
     audio: Res<Audio>,
     player_sound_library: Option<Res<PlayerSoundLibrary>>,
-    mut footsteps_playing: Local<bool>,
+    mut footstep_state: Local<FootstepState>,
 ) {
     if pause_state.is_paused {
         if keyboard.just_pressed(KeyCode::Escape) {
@@ -84,17 +97,35 @@ pub fn handle_input(
         let movement_keys = [KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD];
 
         let any_pressed = movement_keys.iter().any(|key| keyboard.pressed(*key));
-        let any_just_released = movement_keys.iter().any(|key| keyboard.just_released(*key));
+        let shift_pressed = keyboard.pressed(KeyCode::ShiftLeft);
 
         if let Some(player_sound_library) = player_sound_library {
-            if any_pressed && !*footsteps_playing {
-                audio.play(player_sound_library.walk.clone()).looped();
-                *footsteps_playing = true;
-            }
+            let desired_state = if any_pressed {
+                if shift_pressed {
+                    FootstepState::Running
+                } else {
+                    FootstepState::Walking
+                }
+            } else {
+                FootstepState::None
+            };
 
-            if any_just_released && !any_pressed && *footsteps_playing {
-                audio.stop();
-                *footsteps_playing = false;
+            if *footstep_state != desired_state {
+                if *footstep_state != FootstepState::None {
+                    audio.stop();
+                }
+
+                match desired_state {
+                    FootstepState::Walking => {
+                        audio.play(player_sound_library.walk.clone()).looped();
+                    }
+                    FootstepState::Running => {
+                        audio.play(player_sound_library.run.clone()).looped();
+                    }
+                    FootstepState::None => {}
+                }
+
+                *footstep_state = desired_state;
             }
         }
 
