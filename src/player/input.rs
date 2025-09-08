@@ -70,7 +70,7 @@ pub fn handle_input(
             for sword_entity in sword_query.iter() {
                 commands.entity(sword_entity).insert(SwordSlash {
                     start_time: time.elapsed_secs(),
-                    duration: 2.0,
+                    duration: 0.8,
                 });
             }
         }

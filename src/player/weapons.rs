@@ -25,7 +25,8 @@ fn initiate_sword(commands: &mut Commands, asset_server: Res<AssetServer>, camer
         .with_scale(Vec3::splat(0.8))
         .with_rotation(
             Quat::from_rotation_x(std::f32::consts::PI)
-                * Quat::from_rotation_y(15.0_f32.to_radians()),
+                * Quat::from_rotation_y(60.0_f32.to_radians())
+                * Quat::from_rotation_z(-10.0_f32.to_radians()),
         );
 
     let model_entity = commands
@@ -50,41 +51,34 @@ fn phase_progress(elapsed: f32, duration: f32, start_frac: f32, end_frac: f32) -
 }
 
 pub fn animate_sword_slash(
-    mut commands: Commands,
     mut sword_query: Query<(Entity, &mut Transform, &SwordSlash, &SwordRestTransform), With<Sword>>,
     time: Res<Time>,
 ) {
     for (entity, mut transform, slash, rest) in sword_query.iter_mut() {
         let elapsed = time.elapsed_secs() - slash.start_time;
+        let total_duration = slash.duration;
+        let reset_duration = 0.5;
 
-        if elapsed < slash.duration {
-            // Raising the sword
-            let raise_t = phase_progress(elapsed, slash.duration, 0.0, 0.2);
-            let max_rotation = -20.0_f32.to_radians();
-            let rotation = Quat::from_rotation_z(max_rotation * raise_t);
-            transform.rotation = rest.rotation * rotation;
+        if elapsed < total_duration {
+            let raise_t = phase_progress(elapsed, total_duration, 0.0, 0.4);
+            let max_rotation = -15.0_f32.to_radians();
+            let rotation = Quat::from_rotation_z(max_rotation * raise_t)
+                * Quat::from_rotation_x(20.0_f32.to_radians());
 
-            let max_up = 0.2;
-            transform.translation = rest.translation + Vec3::new(0.0, max_up * raise_t, 0.0);
+            let max_up = 0.25;
+            let min_down = -0.75;
+            let min_left = -0.5;
 
-            // Rotate it a bit
-            let tip_offset = Vec3::new(0.0, -20.0, 0.0);
-            transform.translation -= tip_offset;
+            let swing_t = phase_progress(elapsed, total_duration - reset_duration, 0.4, 1.0);
 
-            let max_tip_rotation = 30.0_f32.to_radians();
-            let tip_t = phase_progress(elapsed, slash.duration, 0.2, 1.0);
-            if tip_t > 0.0 {
-                let tip_rotation = Quat::from_rotation_z(max_tip_rotation * tip_t);
-                transform.rotation = transform.rotation * tip_rotation;
-            }
-            transform.translation += tip_offset;
-        } else {
-            // Reset to rest
-            transform.translation = rest.translation;
-            transform.rotation = rest.rotation;
-            transform.scale = rest.scale;
+            let reset_t =
+                ((elapsed - (total_duration - reset_duration)) / reset_duration).clamp(0.0, 1.0);
 
-            commands.entity(entity).remove::<SwordSlash>();
+            let y_offset = (max_up * raise_t + min_down * swing_t) * (1.0 - reset_t);
+            let x_offset = (min_left * swing_t) * (1.0 - reset_t);
+
+            transform.translation = rest.translation + Vec3::new(x_offset, y_offset, 0.0);
+            transform.rotation = rest.rotation * rotation.slerp(Quat::IDENTITY, reset_t);
         }
     }
 }
