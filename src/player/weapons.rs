@@ -18,7 +18,11 @@ pub struct SwordRestTransform {
     pub scale: Vec3,
 }
 
-fn initiate_sword(commands: &mut Commands, asset_server: Res<AssetServer>, camera_entity: &Entity) {
+fn initiate_sword(
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    camera_entity: &Entity,
+) {
     let model_handle: Handle<Scene> = asset_server.load("player/sword.glb#Scene0");
 
     let rest_transform = Transform::from_xyz(0.3, 0.275, -0.8)
@@ -85,7 +89,7 @@ pub fn animate_sword_slash(
 
 pub fn spawn_weapons(
     commands: &mut Commands,
-    asset_server: Res<AssetServer>,
+    asset_server: &Res<AssetServer>,
     camera_entity: &Entity,
 ) {
     initiate_sword(commands, asset_server, camera_entity);

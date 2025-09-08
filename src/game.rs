@@ -65,10 +65,10 @@ fn game_setup(
 
     let camera_entity = setup_player(&mut commands);
     setup_map(&mut commands, &mut meshes, &mut materials, &asset_server);
+    spawn_weapons(&mut commands, &asset_server, &camera_entity);
     setup_hud(&mut commands, &windows);
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, &camera_entity);
-    spawn_weapons(&mut commands, asset_server, &camera_entity);
 }
 
 fn game_cleanup(
