@@ -6,6 +6,7 @@ use crate::entities::map::map::MapEntity;
 use crate::entities::map::{despawn_map, setup_map};
 use crate::menu::load_menu_assets;
 use crate::player::player::Player;
+use crate::player::weapons::{animate_sword_slash, spawn_weapons};
 use crate::player::{
     LookInput, MovementInput, despawn_player, handle_input, player_look, player_movement,
     setup_player,
@@ -36,6 +37,10 @@ pub fn game_plugin(app: &mut App) {
         )
         .add_systems(
             Update,
+            animate_sword_slash.run_if(in_state(GameState::Game).and(not_paused)),
+        )
+        .add_systems(
+            Update,
             update_esc_button_border.run_if(in_state(GameState::Game).and(paused)),
         )
         .add_systems(OnExit(GameState::Game), game_cleanup);
@@ -60,9 +65,10 @@ fn game_setup(
 
     let camera_entity = setup_player(&mut commands);
     setup_map(&mut commands, &mut meshes, &mut materials, &asset_server);
+    spawn_weapons(&mut commands, &asset_server, &camera_entity);
     setup_hud(&mut commands, &windows);
     hide_cursor(windows);
-    spawn_crosshair(&mut commands, &asset_server, camera_entity);
+    spawn_crosshair(&mut commands, &asset_server, &camera_entity);
 }
 
 fn game_cleanup(

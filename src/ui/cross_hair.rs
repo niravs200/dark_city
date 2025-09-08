@@ -18,13 +18,13 @@ pub struct Crosshair;
 pub fn spawn_crosshair(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    camera_entity: Entity,
+    camera_entity: &Entity,
 ) {
     let size = 16.0;
     let cross_hair = asset_server.load("ui/crosshair.png");
 
     commands.spawn((
-        UiTargetCamera(camera_entity),
+        UiTargetCamera(*camera_entity),
         Node {
             position_type: PositionType::Absolute,
             left: Val::Percent(50.0),

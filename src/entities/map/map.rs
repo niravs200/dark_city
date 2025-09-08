@@ -37,15 +37,15 @@ impl Room {
         let map_size = BASE_ROOM_SIZE + self.extension;
 
         let min = Vec3::new(
-            self.offset.x - map_size / 2.0,
+            self.offset.x - map_size,
             self.offset.y - 5.0,
-            self.offset.z - map_size / 2.0,
+            self.offset.z - map_size,
         );
 
         let max = Vec3::new(
-            self.offset.x + map_size / 2.0,
+            self.offset.x + map_size,
             self.offset.y + self.wall_height,
-            self.offset.z + map_size / 2.0,
+            self.offset.z + map_size,
         );
 
         (min, max)
