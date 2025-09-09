@@ -85,7 +85,10 @@ pub fn handle_input(
 
     if !pause_state.is_paused {
         if mouse.just_pressed(MouseButton::Left) {
-            info!("Sword is swinging");
+            if let Some(player_sound_library) = player_sound_library.as_ref() {
+                audio.play(player_sound_library.sword_strike.clone());
+            }
+
             for sword_entity in sword_query.iter() {
                 commands.entity(sword_entity).insert(SwordSlash {
                     start_time: time.elapsed_secs(),
