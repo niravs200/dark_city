@@ -1,7 +1,9 @@
 use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy_kira_audio::Audio;
 use bevy_rapier3d::{control::KinematicCharacterController, prelude::*};
 
 use crate::{
+    audio::player_audio::PlayerSoundLibrary,
     constants::player::{GRAVITY, GROUND_TIMER, JUMP_SPEED, MOUSE_SENSITIVITY, MOVEMENT_SPEED},
     entities::map::map::RoomBoundsData,
     player::weapons::{Sword, SwordSlash},
@@ -11,12 +13,26 @@ use crate::{
         spawn_pause_ui,
     },
 };
+use bevy_kira_audio::prelude::*;
 
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct MovementInput(Vec3);
 
 #[derive(Default, Resource, Deref, DerefMut)]
 pub struct LookInput(Vec2);
+
+#[derive(PartialEq, Eq)]
+pub enum FootstepState {
+    None,
+    Walking,
+    Running,
+}
+
+impl Default for FootstepState {
+    fn default() -> Self {
+        FootstepState::None
+    }
+}
 
 pub fn handle_input(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -31,6 +47,9 @@ pub fn handle_input(
     time: Res<Time>,
     mut hold_timer: Local<f32>,
     sword_query: Query<Entity, With<Sword>>,
+    audio: Res<Audio>,
+    player_sound_library: Option<Res<PlayerSoundLibrary>>,
+    mut footstep_state: Local<FootstepState>,
 ) {
     if pause_state.is_paused {
         if keyboard.just_pressed(KeyCode::Escape) {
@@ -66,12 +85,51 @@ pub fn handle_input(
 
     if !pause_state.is_paused {
         if mouse.just_pressed(MouseButton::Left) {
-            info!("Sword is swinging");
+            if let Some(player_sound_library) = player_sound_library.as_ref() {
+                audio.play(player_sound_library.sword_strike.clone());
+            }
+
             for sword_entity in sword_query.iter() {
                 commands.entity(sword_entity).insert(SwordSlash {
                     start_time: time.elapsed_secs(),
                     duration: 0.8,
                 });
+            }
+        }
+
+        let movement_keys = [KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD];
+
+        let any_pressed = movement_keys.iter().any(|key| keyboard.pressed(*key));
+        let shift_pressed = keyboard.pressed(KeyCode::ShiftLeft);
+        let space_pressed = keyboard.pressed(KeyCode::Space);
+
+        if let Some(player_sound_library) = player_sound_library {
+            let desired_state = if any_pressed && !space_pressed {
+                if shift_pressed {
+                    FootstepState::Running
+                } else {
+                    FootstepState::Walking
+                }
+            } else {
+                FootstepState::None
+            };
+
+            if *footstep_state != desired_state {
+                if *footstep_state != FootstepState::None {
+                    audio.stop();
+                }
+
+                match desired_state {
+                    FootstepState::Walking => {
+                        audio.play(player_sound_library.walk.clone()).looped();
+                    }
+                    FootstepState::Running => {
+                        audio.play(player_sound_library.run.clone()).looped();
+                    }
+                    FootstepState::None => {}
+                }
+
+                *footstep_state = desired_state;
             }
         }
 

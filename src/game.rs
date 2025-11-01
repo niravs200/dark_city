@@ -2,6 +2,7 @@ use bevy::input::InputSystem;
 use bevy::prelude::*;
 
 use super::game_state::GameState;
+use crate::audio::player_audio::load_player_audio;
 use crate::entities::map::map::MapEntity;
 use crate::entities::map::{despawn_map, setup_map};
 use crate::menu::load_menu_assets;
@@ -66,6 +67,7 @@ fn game_setup(
     let camera_entity = setup_player(&mut commands);
     setup_map(&mut commands, &mut meshes, &mut materials, &asset_server);
     spawn_weapons(&mut commands, &asset_server, &camera_entity);
+    load_player_audio(&mut commands, &asset_server);
     setup_hud(&mut commands, &windows);
     hide_cursor(windows);
     spawn_crosshair(&mut commands, &asset_server, &camera_entity);

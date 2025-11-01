@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+mod audio;
 mod constants;
 mod despawn_screen;
 mod entities;
@@ -9,6 +10,7 @@ mod menu;
 mod player;
 mod ui;
 
+use bevy_kira_audio::prelude::*;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use game::game_plugin;
 use game_state::GameState;
@@ -18,6 +20,6 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, RapierPhysicsPlugin::<NoUserData>::default()))
         .init_state::<GameState>()
-        .add_plugins((splash_plugin, menu_plugin, game_plugin))
+        .add_plugins((splash_plugin, menu_plugin, game_plugin, AudioPlugin))
         .run();
 }
