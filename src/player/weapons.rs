@@ -55,6 +55,7 @@ fn phase_progress(elapsed: f32, duration: f32, start_frac: f32, end_frac: f32) -
 }
 
 pub fn animate_sword_slash(
+    mut commands: Commands,
     mut sword_query: Query<(Entity, &mut Transform, &SwordSlash, &SwordRestTransform), With<Sword>>,
     time: Res<Time>,
 ) {
@@ -83,6 +84,8 @@ pub fn animate_sword_slash(
 
             transform.translation = rest.translation + Vec3::new(x_offset, y_offset, 0.0);
             transform.rotation = rest.rotation * rotation.slerp(Quat::IDENTITY, reset_t);
+        } else {
+            commands.entity(entity).remove::<SwordSlash>();
         }
     }
 }

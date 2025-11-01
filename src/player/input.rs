@@ -46,7 +46,7 @@ pub fn handle_input(
     mut esc_state: ResMut<EscButtonState>,
     time: Res<Time>,
     mut hold_timer: Local<f32>,
-    sword_query: Query<Entity, With<Sword>>,
+    sword_query: Query<(Entity, Option<&SwordSlash>), With<Sword>>,
     audio: Res<Audio>,
     player_sound_library: Option<Res<PlayerSoundLibrary>>,
     mut footstep_state: Local<FootstepState>,
@@ -85,15 +85,17 @@ pub fn handle_input(
 
     if !pause_state.is_paused {
         if mouse.just_pressed(MouseButton::Left) {
-            if let Some(player_sound_library) = player_sound_library.as_ref() {
-                audio.play(player_sound_library.sword_strike.clone());
-            }
+            for (sword_entity, slash_opt) in sword_query.iter() {
+                if slash_opt.is_none() {
+                    if let Some(player_sound_library) = player_sound_library.as_ref() {
+                        audio.play(player_sound_library.sword_strike.clone());
+                    }
 
-            for sword_entity in sword_query.iter() {
-                commands.entity(sword_entity).insert(SwordSlash {
-                    start_time: time.elapsed_secs(),
-                    duration: 0.8,
-                });
+                    commands.entity(sword_entity).insert(SwordSlash {
+                        start_time: time.elapsed_secs(),
+                        duration: 0.75,
+                    });
+                }
             }
         }
 
