@@ -101,9 +101,10 @@ pub fn handle_input(
 
         let any_pressed = movement_keys.iter().any(|key| keyboard.pressed(*key));
         let shift_pressed = keyboard.pressed(KeyCode::ShiftLeft);
+        let space_pressed = keyboard.pressed(KeyCode::Space);
 
         if let Some(player_sound_library) = player_sound_library {
-            let desired_state = if any_pressed {
+            let desired_state = if any_pressed && !space_pressed {
                 if shift_pressed {
                     FootstepState::Running
                 } else {
